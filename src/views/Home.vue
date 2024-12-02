@@ -27,6 +27,7 @@
           </div>
         </div>
         <div class="action-container">
+          <button @click="saveDestination" class="save-button">💾 저장</button>
           <button @click.stop.prevent="report[currentIndex]++" class="recommend-button">👍 좋아요</button>
           <span class="recommend-count">좋아요: {{ report[currentIndex] }}</span>
         </div>
@@ -123,6 +124,9 @@ export default {
         this.randomImage = this.images[randomIndex];
       }
     },
+    saveDestination() {
+      alert(`${this.products[this.currentIndex]}이(가) 저장되었습니다!`);
+    },
   },
 };
 </script>
@@ -142,22 +146,6 @@ export default {
   background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
   border-radius: 15px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* 헤더 스타일 */
-.home-header h1 {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #007bff;
-  margin-bottom: 10px;
-  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
-}
-
-.home-header p {
-  font-size: 1.2rem;
-  color: #495057;
-  margin-bottom: 20px;
-  line-height: 1.6;
 }
 
 /* 수평 배치를 위한 그리드 */
@@ -200,6 +188,22 @@ export default {
 
 .recommend-button {
   margin-top: 10px;
+}
+
+.save-button {
+  margin-top: 10px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-left: 10px;
+}
+
+.save-button:hover {
+  background-color: #218838;
 }
 
 /* 랜덤 추천 섹션 */
