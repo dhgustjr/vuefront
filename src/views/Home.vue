@@ -1,24 +1,54 @@
 <template>
   <div class="home-container">
     <div class="home-header">
-      <h1>추천 여행지</h1>
-      <p>인스타그램 api를 이용한 여행지 추천 시스템</p>
+      <h1>✈️ 추천 여행지</h1>
+      <p>인스타그램 API를 활용한<br /> 맞춤형 여행지 추천 서비스</p>
     </div>
 
+    <!-- 수평 정렬을 위한 그리드 -->
     <div class="home-grid">
-      <div class="home-item-wrapper" v-for="(product, index) in products" :key="index">
-        <!-- 여행지명 (카드 위쪽) -->
-        <h4 class="destination-name">{{ product }}</h4>
-        <!-- 박스 -->
-        <div class="home-item">
+      <!-- 스와이프 여행지 추천 -->
+      <div class="home-item-wrapper">
+        <h4 class="destination-name">{{ products[currentIndex] }}</h4>
+        <div
+          class="home-item"
+          @mousedown="onMouseDown"
+          @mousemove="onMouseMove"
+          @mouseup="onMouseUp"
+          @mouseleave="onMouseLeave"
+        >
           <div class="image-wrapper">
-            <img :src="images[index]" alt="여행지 이미지" class="room-img" />
+            <img
+              v-if="images[currentIndex]"
+              :src="images[currentIndex]"
+              alt="여행지 이미지"
+              class="room-img"
+            />
           </div>
-          <button @click="report[index]++" class="recommend-button">추천</button>
-          <span class="recommend-count">추천수: {{ report[index] }}</span>
         </div>
-        <!-- 추천여행지 (카드 아래쪽) -->
-        <p class="destination-description">{{ prices[index] }}</p>
+        <div class="action-container">
+          <button @click.stop.prevent="report[currentIndex]++" class="recommend-button">👍 좋아요</button>
+          <span class="recommend-count">좋아요: {{ report[currentIndex] }}</span>
+        </div>
+        <p class="destination-description">{{ prices[currentIndex] }}</p>
+      </div>
+
+      <!-- 랜덤 여행지 추천 -->
+      <div class="random-item-wrapper">
+        <h4 class="destination-name">🎲 랜덤 추천 여행지</h4>
+        <div class="random-item">
+          <div class="image-wrapper">
+            <img
+              v-if="randomImage"
+              :src="randomImage"
+              alt="랜덤 여행지 이미지"
+              class="room-img"
+            />
+          </div>
+        </div>
+        <div class="action-container">
+          <button @click="getRandomImage" class="reload-button">🔄 새로고침</button>
+        </div>
       </div>
     </div>
   </div>
@@ -26,129 +56,185 @@
 
 <script>
 export default {
-  name: 'HomePage',
+  name: "HomePage",
   data() {
     return {
-      products: ['여행지명1', '여행지명2'],
-      prices: ['추천여행지1', '추천여행지2'],
-      images: [
-        require('@/assets/room0.jpg'), // 이미지 경로 수정
-        require('@/assets/room1.jpg'), // 이미지 경로 수정
-      ],
-      report: [0, 0],
+      products: [], // 여행지명 배열
+      prices: [], // 추천 여행지 배열
+      images: [], // 이미지 배열
+      report: [], // 추천수 배열
+      currentIndex: 0, // 현재 표시 중인 이미지의 인덱스
+      randomImage: null, // 랜덤 추천 이미지
+      startX: 0, // 마우스 시작 위치
+      isDragging: false, // 드래그 상태
     };
+  },
+  async created() {
+    try {
+      const imageCount = await this.getImageCount();
+      for (let i = 0; i < imageCount; i++) {
+        this.images.push(require(`@/assets/room${i}.jpg`));
+        this.products.push(`🗻 여행지명${i + 1}`);
+        this.prices.push(`🌟 추천여행지${i + 1}`);
+        this.report.push(0);
+      }
+      this.getRandomImage();
+    } catch (error) {
+      console.error("이미지를 로드하는 중 오류 발생:", error);
+    }
+  },
+  methods: {
+    async getImageCount() {
+      const context = require.context("@/assets", false, /room\d+\.jpg$/);
+      return context.keys().length;
+    },
+    onMouseDown(event) {
+      this.startX = event.clientX;
+      this.isDragging = true;
+    },
+    onMouseMove(event) {
+      if (this.isDragging) {
+        const deltaX = event.clientX - this.startX;
+        if (deltaX > 50) {
+          this.prevSlide();
+          this.isDragging = false;
+        } else if (deltaX < -50) {
+          this.nextSlide();
+          this.isDragging = false;
+        }
+      }
+    },
+    onMouseUp() {
+      this.isDragging = false;
+    },
+    onMouseLeave() {
+      this.isDragging = false;
+    },
+    nextSlide() {
+      this.currentIndex = (this.currentIndex + 1) % this.images.length;
+    },
+    prevSlide() {
+      this.currentIndex =
+        (this.currentIndex - 1 + this.images.length) % this.images.length;
+    },
+    getRandomImage() {
+      if (this.images.length > 0) {
+        const randomIndex = Math.floor(Math.random() * this.images.length);
+        this.randomImage = this.images[randomIndex];
+      }
+    },
   },
 };
 </script>
 
 <style>
-/* 홈 화면 컨테이너 */
+/* 전체 컨테이너 */
 .home-container {
+  font-family: "Arial", sans-serif;
   display: flex;
   flex-direction: column;
-  align-items: center; /* 중앙 정렬 */
+  align-items: center;
+  justify-content: center;
   margin: 20px auto;
   text-align: center;
-  max-width: 1200px; /* 전체 너비 제한 */
+  max-width: 1200px;
+  padding: 20px;
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* 홈 화면 헤더 */
+/* 헤더 스타일 */
 .home-header h1 {
-  font-size: 2rem;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #007bff;
   margin-bottom: 10px;
-  color: #333;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
 }
 
 .home-header p {
-  font-size: 1rem;
-  color: #666;
+  font-size: 1.2rem;
+  color: #495057;
   margin-bottom: 20px;
+  line-height: 1.6;
 }
 
-/* 그리드 레이아웃 */
+/* 수평 배치를 위한 그리드 */
 .home-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 한 줄에 2개의 칸 배치 */
-  gap: 20px; /* 칸 사이의 간격 */
-  justify-content: center; /* 중앙 정렬 */
-  width: 100%; /* 전체 너비를 화면에 맞춤 */
-  max-width: 900px; /* 그리드의 최대 너비 */
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1200px;
 }
 
-/* 박스 스타일 */
+/* 공통 이미지 스타일 */
+.image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 스와이프 섹션 */
 .home-item-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center; /* 자식 요소 중앙 정렬 */
-  text-align: center; /* 텍스트 중앙 정렬 */
+  align-items: center;
+  width: 45%;
 }
 
 .home-item {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 400px;
+  border: 2px solid #007bff;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  background: white;
+}
+
+.recommend-button {
+  margin-top: 10px;
+}
+
+/* 랜덤 추천 섹션 */
+.random-item-wrapper {
+  display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: 300px; /* 박스 크기 */
-  height: 350px; /* 박스 높이 */
-  overflow: hidden;
-  transition: transform 0.3s, box-shadow 0.3s;
+  width: 45%;
 }
 
-.home-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* 이미지 스타일 */
-.image-wrapper {
+.random-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  height: 80%; /* 이미지가 박스 내에서 차지할 비율 */
+  height: 400px;
+  border: 2px solid #28a745;
+  border-radius: 15px;
   overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  background: white;
 }
 
-.room-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* 이미지 비율 유지하며 박스를 채움 */
-}
-
-/* 추천여행지 (카드 아래쪽) */
-.destination-description {
-  text-align: center;
+.reload-button {
   margin-top: 10px;
-  font-size: 1rem;
-  color: #666;
-}
-
-/* 버튼과 추천수 */
-.recommend-button {
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 5px;
-  padding: 8px 20px;
-  font-size: 1rem;
+  padding: 10px 20px;
   cursor: pointer;
-  margin-top: 10px;
-  transition: background-color 0.3s;
+  font-size: 1rem;
 }
 
-.recommend-button:hover {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
-.recommend-count {
-  margin-top: 8px;
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.destination-name {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 10px;
+.reload-button:hover {
+  background-color: #0056b3;
 }
 </style>
