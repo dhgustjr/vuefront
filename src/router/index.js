@@ -1,23 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
-import Signup from '../views/Signup.vue'; // 회원가입 페이지 추가
+import Signup from '../views/Signup.vue';
 
 const routes = [
   {
-    path: '/',
-    name: 'Home',
-    component: Home,
-  },
-  {
-    path: '/login',
+    path: '/', // 초기 경로를 Login으로 설정
     name: 'Login',
     component: Login,
   },
   {
+    path: '/home',
+    name: 'Home',
+    component: Home,
+  },
+  {
     path: '/signup',
     name: 'Signup',
-    component: Signup, // 회원가입 페이지 경로
+    component: Signup,
   },
 ];
 
